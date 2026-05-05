@@ -2,6 +2,89 @@
 
 # BigTreeTech TFT Touchscreen
 
+---
+
+## Artillery Genius Pro — Custom Fork (branch: `btt-tft28-GD32F305-artillery-genius-pro`)
+
+This branch is a customized build of the BTT TFT firmware targeting the **Artillery Genius Pro** printer, which uses an **MKS GD TFT28 V1.2/1.4** screen with a **GD32F305VCT6** microcontroller.
+
+**Upstream base:** [kisslorand/BIGTREETECH-TFT](https://github.com/kisslorand/BIGTREETECH-TFT) — master branch (a well-maintained community fork of the original BTT firmware)
+
+**Build target:** `MKS_GD_TFT28_V1_2_4`
+
+**Firmware binary:** [`MKSTFT28EVO.bin`](artillery%20tft%20upgrade%20and%20latest%20version/latest%20firmware%20version/MKSTFT28EVO.bin) — copy to SD card root and power on to flash.
+
+### Applied Community PRs
+
+All PRs below are from [rondlh](https://github.com/rondlh) and were cherry-picked from the upstream BTT repository. They had not been merged into the kisslorand fork at the time this branch was created.
+
+| PR | Title | Link |
+|----|-------|-------|
+| #2993 | Replace ad-hoc timer logic with `PENDING`/`ELAPSED` overflow-safe macros across 20+ files | [bigtreetech/BIGTREETECH-TouchScreenFirmware#2993](https://github.com/bigtreetech/BIGTREETECH-TouchScreenFirmware/pull/2993) |
+| #2996 | Fix background loop starvation — prevent serial/temperature tasks from being blocked by busy menus | [bigtreetech/BIGTREETECH-TouchScreenFirmware#2996](https://github.com/bigtreetech/BIGTREETECH-TouchScreenFirmware/pull/2996) |
+| #3000 | Terminal page wrap-around — PAGE_UP/DOWN now wraps instead of stopping at boundaries | [bigtreetech/BIGTREETECH-TouchScreenFirmware#3000](https://github.com/bigtreetech/BIGTREETECH-TouchScreenFirmware/pull/3000) |
+| #3012 | Serial connection improvements | [bigtreetech/BIGTREETECH-TouchScreenFirmware#3012](https://github.com/bigtreetech/BIGTREETECH-TouchScreenFirmware/pull/3012) |
+| #2991 | Notification and toast system improvements | [bigtreetech/BIGTREETECH-TouchScreenFirmware#2991](https://github.com/bigtreetech/BIGTREETECH-TouchScreenFirmware/pull/2991) |
+| #2967 | Long-press gestures, extra baud rates, boolean cleanup | [bigtreetech/BIGTREETECH-TouchScreenFirmware#2967](https://github.com/bigtreetech/BIGTREETECH-TouchScreenFirmware/pull/2967) |
+| #2997 | FatFs R0.16 upgrade with SD freeze-bug fix | [bigtreetech/BIGTREETECH-TouchScreenFirmware#2997](https://github.com/bigtreetech/BIGTREETECH-TouchScreenFirmware/pull/2997) |
+
+### PR Details
+
+#### PR #2993 — Overflow-safe timer macros
+
+Replaced all `lastUpdateTime = OS_GetTimeMs()` / `elapsed < INTERVAL` patterns with two macros:
+
+```c
+#define PENDING(when)  ((int32_t)((when) - OS_GetTimeMs()) > 0)
+#define ELAPSED(when)  ((int32_t)((when) - OS_GetTimeMs()) <= 0)
+```
+
+Applied across 20+ files (`AddonHardware.c`, `FanControl.c`, `SpeedControl.c`, `Notification.c`, `os_timer.c`, and more). Prevents subtle bugs caused by 32-bit millisecond counter wraparound.
+
+#### PR #2996 — Background loop starvation fix
+
+Ensures that when menus are busy (e.g. during long blocking operations), the background communication loop still runs to handle serial data and temperature updates from the mainboard.
+
+#### PR #3000 — Terminal page wrap-around
+
+In the terminal screen, PAGE_UP from the first page now jumps to the last page, and PAGE_DOWN from the last page jumps back to the first, instead of silently doing nothing.
+
+#### PR #3012 — Serial connection improvements
+
+Serial/UART handling improvements for more reliable communication between the TFT and the Marlin mainboard.
+
+#### PR #2991 — Notification and toast system
+
+Toast messages and status reminders now display and dismiss correctly without getting stuck on screen.
+
+#### PR #2967 — Long-press gestures, baud rates, boolean cleanup
+
+**Long-press gestures:**
+- **Heat menu**: long-press the DOWN button → sets target temperature to 0; long-press UP → sets to 200 °C for hotends or 75 °C for the bed
+- **Extrude menu**: long-press the extruder selector → jumps directly to the Heat menu instead of cycling to the next extruder
+- **Move menu**: long-press the step-size button → cycles move speed (Slow / Normal / Fast) instead of changing the step size
+
+**Baud rates:** Added 1,958,400 and 2,000,000 bps as selectable options (options 12 and 13).
+
+**Boolean cleanup:** Removed redundant `== true`, `== false`, `!= false` comparisons throughout the codebase for clarity.
+
+**`loopCheckBackPress()` removed:** Long-press back-navigation is now handled inside `menuKeyGetValue()`.
+
+> **Note:** PR #2967 also includes timer refactors. Those were intentionally **skipped** in this merge because PR #2993's `PENDING`/`ELAPSED` macros had already been applied to the same files and take precedence.
+
+#### PR #2997 — FatFs R0.16 + SD freeze fix
+
+Upgraded the FAT filesystem library from R0.14 to **R0.16** (sourced from [rondlh's FATFS branch](https://github.com/rondlh/BIGTREETECH-TouchScreenFirmware-Freeze-Bug/tree/FATFS)).
+
+Key addition in `diskio.c`: a `handleDiskError()` function that retries failed disk operations up to 100 times before giving up, instead of immediately failing. This fixes the **SD card freeze bug** where certain SD cards would cause the TFT to become unresponsive.
+
+### No Independent Changes
+
+All modifications in this branch come directly from the 7 PRs listed above. No other changes were made to the source code.
+
+---
+
+
 <a href="https://github.com/bigtreetech/BIGTREETECH-TouchScreenFirmware/blob/master/LICENSE"><img alt="license" src="https://img.shields.io/github/license/bigtreetech/bigtreetech-TouchScreenFirmware.svg"></a>
 [![GitHub contributors](https://img.shields.io/github/contributors/bigtreetech/bigtreetech-TouchScreenFirmware.svg)](https://github.com/bigtreetech/BIGTREETECH-TouchScreenFirmware/graphs/contributors)
 <a href="https://github.com/bigtreetech/BIGTREETECH-TouchScreenFirmware/archive/refs/heads/master.zip"><img alt="release date" src="https://img.shields.io/github/last-commit/bigtreetech/BIGTREETECH-TouchScreenFirmware/master.svg?label=release%20date"></a>
