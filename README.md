@@ -78,9 +78,30 @@ Upgraded the FAT filesystem library from R0.14 to **R0.16** (sourced from [rondl
 
 Key addition in `diskio.c`: a `handleDiskError()` function that retries failed disk operations up to 100 times before giving up, instead of immediately failing. This fixes the **SD card freeze bug** where certain SD cards would cause the TFT to become unresponsive.
 
-### No Independent Changes
+### Artillery Genius Pro-Specific Changes (independent of the PRs)
 
-All modifications in this branch come directly from the 7 PRs listed above. No other changes were made to the source code.
+Two small changes were made manually to adapt the firmware to this specific printer, not sourced from any PR:
+
+#### Default baud rate — `TFT/src/User/Configuration.h`
+
+```c
+// Before (upstream default):
+#define SP_1 6  // 115200 baud
+
+// After:
+#define SP_1 8  // 250000 baud — Artillery Genius Pro default
+```
+
+The Artillery Genius Pro mainboard communicates at 250000 baud by default. Without this change, the TFT would not connect to the printer on first boot (the user would have to change it manually through the settings menu).
+
+#### Remove non-existent UART4 — `TFT/src/User/Variants/pin_MKS_GD_TFT28_V1_2_4.h`
+
+```c
+// Removed:
+#define SERIAL_PORT_4 _UART4
+```
+
+The GD32F305VCT6 chip used in the Artillery Genius Pro's TFT board does not have UART4 exposed on this hardware variant. The upstream definition caused a build warning and referred to a port that is not connected to anything.
 
 ---
 
