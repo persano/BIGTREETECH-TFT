@@ -133,13 +133,13 @@ void heatSetWaiting(uint8_t index, const bool isWaiting)
 
   heater.T[index].waiting = isWaiting;
 
-  if (isWaiting == true)  // wait heating now, query more frequently
+  if (isWaiting)  // wait heating now, query more frequently
   {
     heat_waiting = true;  // always set to "true" when waiting for heating
 
     heatSetUpdateSeconds(TEMPERATURE_QUERY_FAST_SECONDS);
   }
-  else if (heatIsWaiting() == false)
+  else if (!heatIsWaiting())
   {
     heatSetUpdateSeconds(TEMPERATURE_QUERY_SLOW_SECONDS);
   }
@@ -152,7 +152,7 @@ bool heatIsWaiting(void)
 
   for (uint8_t i = 0; i < MAX_HEATER_COUNT; i++)
   {
-    if (heater.T[i].waiting == true)
+    if (heater.T[i].waiting)
       return true;
   }
 
@@ -163,7 +163,7 @@ bool heatIsWaiting(void)
 
 bool heatIsWaitingTimedout(void)
 {
-  if (!heatIsWaiting() || OS_GetTimeMs() - heat_timestamp < HEATING_TIMEOUT)  // if no heater waiting for target temperature or no timeout
+  if (!heatIsWaiting() || !ELAPSED(heat_timestamp, HEATING_TIMEOUT))  // if no heater waiting for target temperature or no timeout
     return false;
 
   heat_timestamp = OS_GetTimeMs();  // update timestamp
@@ -260,7 +260,7 @@ void loopCheckHeater(void)
     // feature to automatically report the temperatures or (if M155 is supported) check temperature auto-report timeout
     // and resend M155 command in case of timeout expired
 
-    if (OS_GetTimeMs() < heat_next_update_time)  // if next check time not yet elapsed, do nothing
+    if (PENDING(heat_next_update_time))  // if next check time not yet elapsed, do nothing
       break;
 
     heatSetNextUpdateTime();  // extend next check time

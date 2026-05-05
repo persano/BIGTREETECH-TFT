@@ -90,7 +90,9 @@ void menuInfo(void)
 
   // GUI_HLine(0, clocks[5].y + BYTE_HEIGHT, LCD_WIDTH);
 
-  const uint16_t top_y = 0;  // (LCD_HEIGHT - (7 * BYTE_HEIGHT)) / 2;  // 8 firmware info lines + 1 SPI flash info line
+  const uint16_t top_y = BYTE_HEIGHT*2 + (LCD_HEIGHT - (11 * BYTE_HEIGHT)) / 2;
+
+  GUI_HLine(0, BYTE_HEIGHT*2, LCD_WIDTH);
   const uint16_t start_x = strlen("Firmware:") * BYTE_WIDTH;
   const GUI_RECT version[7] = {
     {start_x, top_y + 0*BYTE_HEIGHT, LCD_WIDTH, top_y + 2*BYTE_HEIGHT},
@@ -118,7 +120,14 @@ void menuInfo(void)
   // draw info
   GUI_SetColor(0xDB40);
   GUI_DispStringInPrectEOL(&version[0], (uint8_t *) firmware_name);
-  GUI_DispStringInPrectEOL(&version[1], (uint8_t *) machine_type);
+  {
+    char mdisplay[sizeof(machine_type)];
+    strncpy_no_pad(mdisplay, machine_type, sizeof(mdisplay));
+    mdisplay[sizeof(mdisplay) - 1] = '\0';
+    char *sep = strstr(mdisplay, " - ");
+    if (sep) *sep = '\0';
+    GUI_DispStringInPrectEOL(&version[1], (uint8_t *) mdisplay);
+  }
   GUI_DispStringInPrectEOL(&version[2], (uint8_t *) hardware);
 
   sprintf(buf, "V"STRINGIFY(SOFTWARE_VERSION) " " __DATE__ " in %dMhz", mcuClocks.rccClocks.SYSCLK_Frequency / 1000000);

@@ -25,10 +25,10 @@ static const char * const itemNotificationType[ITEM_NOTIFICATION_TYPE_NUM] = {
 
 static const char * const itemSortBy[SORT_BY_COUNT] = {
   // item value text(only for custom value)
-  "Date ▼",
-  "Date ▲",
-  "Name ▲",
-  "Name ▼",
+  "Date v",
+  "Date ^",
+  "Name ^",
+  "Name v",
 };
 
 #ifdef HAS_EMULATOR

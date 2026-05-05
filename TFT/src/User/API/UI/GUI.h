@@ -151,8 +151,8 @@ void GUI_DispFloat(int16_t x, int16_t y, float num, uint8_t llen, uint8_t rlen, 
 typedef struct
 {
   uint8_t * context[RADIO_SIZE];
-  uint16_t  sx;
-  uint16_t  sy;
+  uint16_t  x0;
+  uint16_t  y0;
   uint8_t   distance;
   uint8_t   num;
   uint8_t   select;

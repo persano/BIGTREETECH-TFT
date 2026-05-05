@@ -84,7 +84,7 @@ static void system_clock_72m_irc8m(void);
 uint32_t SystemCoreClock = __SYSTEM_CLOCK_108M_PLL_IRC8M;
 static void system_clock_108m_irc8m(void);
 #elif defined (__SYSTEM_CLOCK_120M_PLL_IRC8M)
-uint32_t SystemCoreClock = __SYSTEM_CLOCK_120M_PLL_IRC8M;
+//uint32_t SystemCoreClock = __SYSTEM_CLOCK_120M_PLL_IRC8M; Modif_fred
 static void system_clock_120m_irc8m(void);
 
 #elif defined (__SYSTEM_CLOCK_HXTAL)
@@ -100,7 +100,7 @@ static void system_clock_72m_hxtal(void);
 uint32_t SystemCoreClock = __SYSTEM_CLOCK_108M_PLL_HXTAL;
 static void system_clock_108m_hxtal(void);
 #elif defined (__SYSTEM_CLOCK_120M_PLL_HXTAL)
-//uint32_t SystemCoreClock = __SYSTEM_CLOCK_120M_PLL_HXTAL; Modif_fred
+uint32_t SystemCoreClock = __SYSTEM_CLOCK_120M_PLL_HXTAL;
 static void system_clock_120m_hxtal(void);
 #endif /* __SYSTEM_CLOCK_IRC8M */
 
@@ -486,13 +486,13 @@ static void system_clock_120m_irc8m(void)
     
     /* enable the high-drive to extend the clock frequency to 120 MHz */
     PMU_CTL |= PMU_CTL_HDEN;
-    while(0U == (PMU_CS & PMU_CS_HDRF)){
-    }
+    { volatile uint32_t hd_to = 0xFFFFU; while((0U == (PMU_CS & PMU_CS_HDRF)) && hd_to--){} }
+
     
     /* select the high-drive mode */
     PMU_CTL |= PMU_CTL_HDS;
-    while(0U == (PMU_CS & PMU_CS_HDSRF)){
-    }
+    { volatile uint32_t hd_to = 0xFFFFU; while((0U == (PMU_CS & PMU_CS_HDSRF)) && hd_to--){} }
+
     
     /* select PLL as system clock */
     RCU_CFG0 &= ~RCU_CFG0_SCS;
@@ -833,10 +833,9 @@ static void system_clock_120m_hxtal(void)
         stab_flag = (RCU_CTL & RCU_CTL_HXTALSTB);
     }while((0U == stab_flag) && (HXTAL_STARTUP_TIMEOUT != timeout));
 
-    /* if fail */
+    /* if fail - return rather than hang; system runs on IRC8M */
     if(0U == (RCU_CTL & RCU_CTL_HXTALSTB)){
-        while(1){
-        }
+        return;
     }
 
     RCU_APB1EN |= RCU_APB1EN_PMUEN;
@@ -860,45 +859,35 @@ static void system_clock_120m_hxtal(void)
     RCU_CFG0 |= RCU_PLL_MUL30;
 
 #elif defined(GD32F30X_CL)
-    /* CK_PLL = (CK_PREDIV0) * 30 = 120 MHz */ 
+    /* CK_PLL = (CK_PREDIV0) * 30 = 120 MHz */
     RCU_CFG0 &= ~(RCU_CFG0_PLLMF | RCU_CFG0_PLLMF_4 | RCU_CFG0_PLLMF_5);
     RCU_CFG0 |= (RCU_PLLSRC_HXTAL_IRC48M | RCU_PLL_MUL30);
 
-    /* CK_PREDIV0 = (CK_HXTAL)/5 *8 /10 = 4 MHz */ 
+    /* CK_PREDIV0 = (CK_HXTAL)/5 *8 /10 = 4 MHz */
     RCU_CFG1 &= ~(RCU_CFG1_PLLPRESEL | RCU_CFG1_PREDV0SEL | RCU_CFG1_PLL1MF | RCU_CFG1_PREDV1 | RCU_CFG1_PREDV0);
     RCU_CFG1 |= (RCU_PLLPRESRC_HXTAL | RCU_PREDV0SRC_CKPLL1 | RCU_PLL1_MUL8 | RCU_PREDV1_DIV5 | RCU_PREDV0_DIV10);
 
     /* enable PLL1 */
     RCU_CTL |= RCU_CTL_PLL1EN;
-    /* wait till PLL1 is ready */
-    while((RCU_CTL & RCU_CTL_PLL1STB) == 0U){
-    }
+    { volatile uint32_t pll1_to = 0xFFFFU; while(((RCU_CTL & RCU_CTL_PLL1STB) == 0U) && pll1_to--){} }
 #endif /* GD32F30X_HD and GD32F30X_XD */
 
     /* enable PLL */
     RCU_CTL |= RCU_CTL_PLLEN;
-
-    /* wait until PLL is stable */
-    while(0U == (RCU_CTL & RCU_CTL_PLLSTB)){
-    }
+    { volatile uint32_t pll_to = 0xFFFFU; while((0U == (RCU_CTL & RCU_CTL_PLLSTB)) && pll_to--){} }
 
     /* enable the high-drive to extend the clock frequency to 120 MHz */
     PMU_CTL |= PMU_CTL_HDEN;
-    while(0U == (PMU_CS & PMU_CS_HDRF)){
-    }
+    { volatile uint32_t hd_to = 0xFFFFU; while((0U == (PMU_CS & PMU_CS_HDRF)) && hd_to--){} }
 
     /* select the high-drive mode */
     PMU_CTL |= PMU_CTL_HDS;
-    while(0U == (PMU_CS & PMU_CS_HDSRF)){
-    }
+    { volatile uint32_t hds_to = 0xFFFFU; while((0U == (PMU_CS & PMU_CS_HDSRF)) && hds_to--){} }
 
     /* select PLL as system clock */
     RCU_CFG0 &= ~RCU_CFG0_SCS;
     RCU_CFG0 |= RCU_CKSYSSRC_PLL;
-
-    /* wait until PLL is selected as system clock */
-    while(0U == (RCU_CFG0 & RCU_SCSS_PLL)){
-    }
+    { volatile uint32_t sw_to = 0xFFFFU; while((0U == (RCU_CFG0 & RCU_SCSS_PLL)) && sw_to--){} }
 }
 #endif /* __SYSTEM_CLOCK_IRC8M */
 
@@ -995,3 +984,8 @@ void RCU_GetClocksFreq(RCC_ClocksTypeDef* RCC_Clocks)
     clk_exp = apb2_exp[idx];
     RCC_Clocks->PCLK2_Frequency = RCC_Clocks->HCLK_Frequency >> clk_exp;
 }
+
+/* Override platform SystemInit so startup does not run HXTAL clock config before main() */
+void SystemInit(void) {}
+
+

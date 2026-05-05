@@ -2,6 +2,8 @@
 #include "includes.h"
 #include <math.h>
 
+#define NUMBER_OF_PIXELS_BEFORE_YIELD 10000 // yield to RAPID_SERIAL_LOOP after drawing a number of pixels
+
 static uint16_t foreGroundColor = WHITE;
 static uint16_t backGroundColor = BLACK;
 static GUI_TEXT_MODE guiTextMode = GUI_TEXTMODE_NORMAL;
@@ -67,14 +69,7 @@ void GUI_CancelRange(void)
 
 void GUI_Clear(uint16_t color)
 {
-  uint32_t index = 0;
-
-  LCD_SetWindow(0, 0, LCD_WIDTH - 1, LCD_HEIGHT - 1);
-
-  for (index = 0; index < LCD_WIDTH * LCD_HEIGHT; index++)
-  {
-    LCD_WR_16BITS_DATA(color);
-  }
+  GUI_FillRectColor(0, 0, LCD_WIDTH, LCD_HEIGHT, color);
 }
 
 /** @brief Draw a pixel/point
@@ -109,17 +104,7 @@ void GUI_DrawPoint(uint16_t x, uint16_t y)
  */
 void GUI_FillRect(uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey)
 {
-  uint16_t i = 0, j = 0;
-
-  LCD_SetWindow(sx, sy, ex - 1, ey - 1);
-
-  for (i = sx; i < ex; i++)
-  {
-    for (j = sy; j < ey; j++)
-    {
-      LCD_WR_16BITS_DATA(foreGroundColor);
-    }
-  }
+  GUI_FillRectColor(sx, sy, ex, ey, foreGroundColor);
 }
 
 void GUI_FillPrect(const GUI_RECT * rect)
@@ -135,17 +120,7 @@ void GUI_FillPrect(const GUI_RECT * rect)
  */
 void GUI_ClearRect(uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey)
 {
-  uint16_t i = 0, j = 0;
-
-  LCD_SetWindow( sx, sy, ex - 1, ey - 1);
-
-  for (i = sx; i < ex; i++)
-  {
-    for (j = sy; j < ey; j++)
-    {
-      LCD_WR_16BITS_DATA(backGroundColor);
-    }
-  }
+  GUI_FillRectColor(sx, sy, ex, ey, backGroundColor);
 }
 
 void GUI_ClearPrect(const GUI_RECT * rect)
@@ -162,16 +137,18 @@ void GUI_ClearPrect(const GUI_RECT * rect)
  */
 void GUI_FillRectColor(uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey, uint16_t color)
 {
-  uint16_t i = 0, j = 0;
+  uint16_t rows = 1 + NUMBER_OF_PIXELS_BEFORE_YIELD / (ey - sy);
 
-  LCD_SetWindow(sx, sy, ex - 1, ey - 1);
-
-  for (i = sx; i < ex; i++)
+  for (uint16_t y = sy; y < ey; y += rows)
   {
-    for (j = sy; j < ey; j++)
-    {
+    uint16_t y_end = (y + rows <= ey) ? y + rows - 1 : ey - 1;
+    LCD_SetWindow(sx, y, ex - 1, y_end);
+    uint32_t pixels = (uint32_t)(ex - sx) * (y_end - y + 1);
+
+    while (pixels--)
       LCD_WR_16BITS_DATA(color);
-    }
+
+    RAPID_SERIAL_LOOP();
   }
 }
 
@@ -1117,9 +1094,9 @@ void RADIO_Create(RADIO * radio)
     else
       GUI_SetColor(RADIO_IDLE_COLOR);
 
-    GUI_FillCircle(radio->sx + BYTE_HEIGHT / 2, i * radio->distance + radio->sy + BYTE_HEIGHT / 2, BYTE_HEIGHT / 8);
-    GUI_DrawCircle(radio->sx + BYTE_HEIGHT / 2, i * radio->distance + radio->sy + BYTE_HEIGHT / 2, BYTE_HEIGHT / 4);
-    GUI_DispString(radio->sx + BYTE_HEIGHT,     i * radio->distance + radio->sy,                   radio->context[i]);
+    GUI_FillCircle(radio->x0 + BYTE_HEIGHT / 2, i * radio->distance + radio->y0 + BYTE_HEIGHT / 2, BYTE_HEIGHT / 8);
+    GUI_DrawCircle(radio->x0 + BYTE_HEIGHT / 2, i * radio->distance + radio->y0 + BYTE_HEIGHT / 2, BYTE_HEIGHT / 4);
+    GUI_DispString(radio->x0 + BYTE_HEIGHT,     i * radio->distance + radio->y0,                   radio->context[i]);
   }
 
   GUI_SetColor(tmp);
@@ -1145,9 +1122,9 @@ void RADIO_Select(RADIO * radio, uint8_t select)
       GUI_SetColor(RADIO_SELECTED_COLOR);
     }
 
-    GUI_FillCircle(radio->sx + BYTE_HEIGHT / 2, radio->select * radio->distance + radio->sy + BYTE_HEIGHT / 2, BYTE_HEIGHT / 8);
-    GUI_DrawCircle(radio->sx + BYTE_HEIGHT / 2, radio->select * radio->distance + radio->sy + BYTE_HEIGHT / 2, BYTE_HEIGHT / 4);
-    GUI_DispString(radio->sx + BYTE_HEIGHT,     radio->select * radio->distance + radio->sy,                   radio->context[radio->select]);
+    GUI_FillCircle(radio->x0 + BYTE_HEIGHT / 2, radio->select * radio->distance + radio->y0 + BYTE_HEIGHT / 2, BYTE_HEIGHT / 8);
+    GUI_DrawCircle(radio->x0 + BYTE_HEIGHT / 2, radio->select * radio->distance + radio->y0 + BYTE_HEIGHT / 2, BYTE_HEIGHT / 4);
+    GUI_DispString(radio->x0 + BYTE_HEIGHT,     radio->select * radio->distance + radio->y0,                   radio->context[radio->select]);
   }
 
   GUI_SetColor(tmp);
@@ -1179,7 +1156,7 @@ void Scroll_DispString(SCROLL * para, uint8_t align)
 
   if (para->totalPixelWidth > para->maxPixelWidth)
   {
-    if (OS_GetTimeMs() >= para->time)
+    if (!PENDING(para->time))
     {
       para->time = OS_GetTimeMs() + 50;  // 50ms
       GUI_SetRange(para->rect.x0, para->rect.y0, para->rect.x1, para->rect.y1);

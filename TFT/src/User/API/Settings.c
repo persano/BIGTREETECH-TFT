@@ -345,8 +345,8 @@ void checkflashSign(void)
 
     ypos += BYTE_HEIGHT;
     GUI_DispStringInRectEOL(10, ypos + 10, LCD_WIDTH, LCD_HEIGHT, (uint8_t *) "Insert the SD card with the required\n"
-                                                                              "files and press the reset button\nto update.");
-    while (1);
+                                                                              "files and press the reset button\nto update.\nBooting in 3 seconds...");
+    Delay_ms(3000);
   }
 }
 

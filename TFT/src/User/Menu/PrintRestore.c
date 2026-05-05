@@ -10,7 +10,7 @@ void menuPrintRestore(void)
 
   GUI_DispString((LCD_WIDTH - GUI_StrPixelWidth(LABEL_LOADING)) / 2, LCD_HEIGHT / 2 - BYTE_HEIGHT, LABEL_LOADING);
 
-  if (mountFS() == true && powerFailedExist())  // powerFailedExist function sets both infoFile.path and PLR filename
+  if (mountFS() && powerFailedExist())  // powerFailedExist function sets both infoFile.path and PLR filename
   {
     // textSelect() can use a shared buffer (if a language package is being used)
     // so we need to buffer 2 of the 3 labels provided in popupDrawPage()

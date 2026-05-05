@@ -3,13 +3,15 @@
 
 int main(void)
 {
+  SysTick->CTRL = 0;           // disable bootloader's SysTick — if TICKINT=1 it fires Default_Handler before Delay_init()
+  SysTick->VAL  = 0;
+  SCB->VTOR = VECT_TAB_FLASH;  // set before __enable_irq so interrupts use our vectors
+
   #ifdef GD32F3XX
-    __enable_irq();  // required due to enabling interrupt after vector table relocation
+    __enable_irq();
   #endif
 
   SystemClockInit();  // it depends on "variants.h" included in "includes.h"
-
-  SCB->VTOR = VECT_TAB_FLASH;
 
   HW_Init();
 

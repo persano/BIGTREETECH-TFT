@@ -91,7 +91,7 @@ void statusSetReady(void)
 {
   strncpy_no_pad(msgTitle, textSelect(LABEL_STATUS), sizeof(msgTitle));
 
-  if (infoHost.connected == false)
+  if (!infoHost.connected)
     strncpy_no_pad(msgBody, textSelect(LABEL_UNCONNECTED), sizeof(msgBody));
   else
     snprintf(msgBody, sizeof(msgBody), "%s %s", infoGetMachineType(), textSelect(LABEL_READY));

@@ -237,7 +237,7 @@ void menuTuneExtruder(void)
         break;
     }
 
-    if (loadRequested == true && heatSetTool(tool_index))
+    if (loadRequested && heatSetTool(tool_index))
     {
       switch (warmupNozzle())
       {
@@ -275,6 +275,6 @@ void menuTuneExtruder(void)
   }
 
   // set slow update time if not waiting for target temperature
-  if (heatIsWaiting() == false)
+  if (!heatIsWaiting())
     heatSetUpdateSeconds(TEMPERATURE_QUERY_SLOW_SECONDS);
 }

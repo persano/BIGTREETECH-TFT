@@ -38,6 +38,20 @@
   #define UART5_RX_PIN  PD2
 #endif
 
+// Auto-detect GPIO remaps: non-default pins require remap to be enabled
+#if (USART2_TX_PIN == PD5)
+  #define USART2_REMAP  GPIO_USART1_REMAP
+#else
+  #define USART2_REMAP  0
+#endif
+#if (USART3_TX_PIN == PD8)
+  #define USART3_REMAP  GPIO_USART2_FULL_REMAP
+#elif (USART3_TX_PIN == PC10)
+  #define USART3_REMAP  GPIO_USART2_PARTIAL_REMAP
+#else
+  #define USART3_REMAP  0
+#endif
+
 static rcu_periph_reset_enum rcu_uart_rst[_UART_CNT] = {
   RCU_USART0RST,
   RCU_USART1RST,
@@ -64,10 +78,11 @@ static uint32_t const uart[_UART_CNT] = {
 
 static const uint16_t uart_tx[_UART_CNT] = {USART1_TX_PIN, USART2_TX_PIN, USART3_TX_PIN, UART4_TX_PIN, UART5_TX_PIN};  // TX
 static const uint16_t uart_rx[_UART_CNT] = {USART1_RX_PIN, USART2_RX_PIN, USART3_RX_PIN, UART4_RX_PIN, UART5_RX_PIN};  // RX
+static const uint32_t uart_remap[_UART_CNT] = {0, USART2_REMAP, USART3_REMAP, 0, 0};
 
 static inline void UART_GPIO_Init(uint8_t port)
 {
-  GPIO_InitSet(uart_tx[port], MGPIO_MODE_AF_PP, 0);
+  GPIO_InitSet(uart_tx[port], MGPIO_MODE_AF_PP, uart_remap[port]);
   GPIO_InitSet(uart_rx[port], MGPIO_MODE_IPU, 0);
 }
 

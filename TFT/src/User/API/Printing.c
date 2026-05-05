@@ -380,6 +380,7 @@ static void completePrint(void)
     case FS_TFT_USB:
       f_close(&infoPrinting.file);
       powerFailedDelete();  // close and delete PLR file, if any
+      mountSDCard();        // remount so the card is accessible immediately after print
       break;
 
     case FS_ONBOARD_MEDIA:
@@ -617,7 +618,7 @@ bool pausePrint(bool isPause, PAUSE_TYPE pauseType)
   {
     case FS_TFT_SD:
     case FS_TFT_USB:
-      if (isPause == true && pauseType == PAUSE_M0)
+      if (isPause && pauseType == PAUSE_M0)
       {
         // update pause status just to block command queue feeding with gcodes from TFT media avoiding
         // a possible deadlock in loop condition TASK_LOOP_WHILE(isNotEmptyCmdQueue())
@@ -675,7 +676,7 @@ bool pausePrint(bool isPause, PAUSE_TYPE pauseType)
           if (isRelative == true)  mustStoreCmd("G90\n");
           if (isRelativeE == true) mustStoreCmd("M82\n");
 
-          if (extrusionDuringPause == true)  // check if extrusion done during Print -> Pause
+          if (extrusionDuringPause)  // check if extrusion done during Print -> Pause
           { // no purge
             extrusionDuringPause = false;
           }
@@ -951,7 +952,7 @@ void loopPrintFromOnboard(void)
   do
   { // send M27 to query SD print status continuously
 
-    if (OS_GetTimeMs() < nextUpdateTime)  // if next check time not yet elapsed, do nothing
+    if (PENDING(nextUpdateTime))  // if next check time not yet elapsed, do nothing
       break;
 
     printSetNextUpdateTime();  // extend next check time

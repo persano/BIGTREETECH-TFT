@@ -5,7 +5,8 @@ static uint8_t fac_us = 0;
 
 void Delay_init(void)
 {
-  SysTick->CTRL &= 0xfffffffb;                                  // bit2 is cleared, select external clock HCLK / 8
+  SysTick->CTRL = 0x00;  // fully disable SysTick (clears ENABLE, TICKINT, CLKSOURCE) — bootloader may leave TICKINT=1
+  SysTick->VAL  = 0x00;  // clear counter so first Delay_us starts clean
   fac_us = mcuClocks.rccClocks.HCLK_Frequency / (8 * 1000000);  // 8 Frequency after frequency division Unit M is 1us times
 }
 

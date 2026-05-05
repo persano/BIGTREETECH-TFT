@@ -503,6 +503,7 @@ static inline void drawKeyboard(void)
       GUI_VLine(editorKeyRect[i + GKEY_BACK + 1].x1, editorAreaRect[1].y0, editorAreaRect[1].y1);
     }
 
+    RAPID_SERIAL_LOOP();
     // draw horizontal button borders
     for (int i = 0; i < (KB_ROW_COUNT - 1); i++)
     {
@@ -513,6 +514,7 @@ static inline void drawKeyboard(void)
   for (uint8_t i = GKEY_SEND; i < COUNT(gcodeKey123); i++)  // draw all the visible keys (text box keys are skipped)
   {
     keyboardDrawButton(i, false);
+    RAPID_SERIAL_LOOP();
   }
 }
 
@@ -583,7 +585,7 @@ static inline void menuKeyboardView(void)
       case GKEY_SEND:
         if (nowIndex)
         {
-          if (saveEnabled == true)  // avoid saving again a gcode called from gcode history table
+          if (saveEnabled)  // avoid saving again a gcode called from gcode history table
           {
             strcpy(keyboardData->gcodeTable[saveGcodeIndex], gcodeBuf);  // save gcode to history table
             saveGcodeIndex = (saveGcodeIndex + 1) % MAX_GCODE_COUNT;     // move to next save index in the gcode history table
@@ -825,6 +827,7 @@ static inline void terminalDrawMenu(void)
   for (uint8_t i = 0; i < COUNT(terminalKeyRect); i++)
   {
     terminalDrawButton(i, false);
+    RAPID_SERIAL_LOOP();
   }
 
   terminalDrawPageNumber();
@@ -858,11 +861,15 @@ static void menuTerminalView(void)
       case TERM_PAGE_UP:  // page up
         if (terminalData->pageIndex < terminalData->pageCount)
           terminalData->pageIndex++;
+        else
+          terminalData->pageIndex = 0;
         break;
 
       case TERM_PAGE_DOWN:  // page down
         if (terminalData->pageIndex > 0)
           terminalData->pageIndex--;
+        else
+          terminalData->pageIndex = terminalData->pageCount;
         break;
 
       case TERM_TOGGLE_ACK:  // toggle ack in terminal

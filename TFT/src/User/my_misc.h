@@ -43,6 +43,10 @@ extern "C" {
 // flip all bits
 #define FLIP_BITS(num) ~num
 
+// timer rollover safe functions
+#define PENDING(when)                ((int32_t)((when) - OS_GetTimeMs()) > 0)
+#define ELAPSED(starttime, interval) !PENDING((starttime) + (interval))
+
 // time conversion
 #define SEC_TO_MS(t)  (t * 1000)           // seconds to milliseconds
 #define MS_TO_SEC(t)  (t / 1000)           // milliseconds to seconds

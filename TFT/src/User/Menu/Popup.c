@@ -202,7 +202,7 @@ void showDialog(DIALOG_TYPE type, void (* ok_action)(void), void (* cancel_actio
 void loopPopup(void)
 {
   // display the last received popup message, overriding previous popup messages, if any
-  if (popup_redraw == false)
+  if (!popup_redraw)
     return;
 
   popup_redraw = false;

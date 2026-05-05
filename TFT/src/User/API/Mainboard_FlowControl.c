@@ -35,6 +35,8 @@ void resetPendingQueries(void)
 // non-UI background loop tasks
 void loopBackEnd(void)
 {
+  if (!infoMenu.menu[infoMenu.cur])
+    return;
   UPD_SCAN_RATE();  // debug monitoring KPI
 
   // handle a print from TFT media, if any
@@ -54,6 +56,16 @@ void loopBackEnd(void)
   // handle USB communication
   #ifdef USB_FLASH_DRIVE_SUPPORT
     USB_LoopProcess();
+  #endif
+
+  // check changes in encoder steps
+  #if LCD_ENCODER_SUPPORT
+    #ifdef HAS_EMULATOR
+      if (MENU_IS_NOT(menuMarlinMode))
+    #endif
+    {
+      LCD_Enc_CheckSteps();
+    }
   #endif
 
   if ((priorityCounter.be++ % BE_PRIORITY_DIVIDER) != 0)  // a divider value of 16 -> run 6% of the time only
@@ -98,16 +110,6 @@ void loopBackEnd(void)
     FIL_BE_CheckRunout();
   #endif
 
-  // check changes in encoder steps
-  #if LCD_ENCODER_SUPPORT
-    #ifdef HAS_EMULATOR
-      if (MENU_IS_NOT(menuMarlinMode))
-    #endif
-    {
-      LCD_Enc_CheckSteps();
-    }
-  #endif
-
   // check mode switching
   #ifdef HAS_EMULATOR
     Mode_CheckSwitching();
@@ -118,10 +120,7 @@ void loopBackEnd(void)
     loopScreenShot();
   #endif
 
-  // check if Back is pressed and held
-  #ifdef SMART_HOME
-    loopCheckBackPress();
-  #endif
+  // long-press back handling merged into menuKeyGetValue() (PR #2967)
 
   // check LCD screen dimming
   #ifdef LCD_LED_PWM_CHANNEL

@@ -27,7 +27,6 @@
   #define USART2_RX_PIN PD6
   #define USART3_TX_PIN PD8
   #define USART3_RX_PIN PD9
-  #define SERIAL_PORT_4 _UART4
 #endif
 
 // USB Disk support

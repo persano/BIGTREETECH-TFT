@@ -75,6 +75,7 @@ void HW_Init(void)
 
   LCD_RefreshDirection(infoSettings.rotated_ui);  // refresh display direction after reading settings
   scanUpdates();                                  // scan icon, fonts and config files
+  W25Qxx_Init();                                  // re-init SPI flash: SD_Init inside mountSDCard() resets SPI1 peripheral
   checkflashSign();                               // check font/icon/config signature in SPI flash for update
   initMachineSettings();                          // load default machine settings
 
@@ -109,7 +110,7 @@ void HW_Init(void)
       LCD_Enc_InitActiveSignal();
   #endif
 
-  if (readIsTSCExist() == false)  // read settings parameter
+  if (!readIsTSCExist())  // read settings parameter
   {
     LCD_RefreshDirection(infoSettings.rotated_ui);
     TS_Calibrate();
@@ -120,8 +121,7 @@ void HW_Init(void)
     storePara();
   }
 
-  LCD_SET_BRIGHTNESS(lcd_brightness[infoSettings.lcd_brightness]);
-
+  LCD_SET_BRIGHTNESS(lcd_brightness[infoSettings.lcd_brightness]);  // backlight on after settings loaded
   LED_SetColor(&infoSettings.led_color, false);  // set (neopixel) LED light current color to configured color
 
   Mode_Switch();
