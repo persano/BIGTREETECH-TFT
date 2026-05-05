@@ -186,7 +186,7 @@ void initSettings(void)
   resetConfig();
 
   // calculate checksum excluding the CRC variable in infoSettings
-  infoSettings.CRC_checksum = calculateCRC16((uint8_t *) &infoSettings + sizeof(infoSettings.CRC_checksum),
+  infoSettings.CRC_checksum = calculateCRC32((uint8_t *) &infoSettings + sizeof(infoSettings.CRC_checksum),
                                                   sizeof(infoSettings) - sizeof(infoSettings.CRC_checksum));
 }
 
@@ -194,7 +194,7 @@ void initSettings(void)
 void saveSettings(void)
 {
   // calculate checksum excluding the CRC variable in infoSettings
-  uint32_t curCRC = calculateCRC16((uint8_t *) &infoSettings + sizeof(infoSettings.CRC_checksum),
+  uint32_t curCRC = calculateCRC32((uint8_t *) &infoSettings + sizeof(infoSettings.CRC_checksum),
                                         sizeof(infoSettings) - sizeof(infoSettings.CRC_checksum));
 
   if (curCRC != infoSettings.CRC_checksum)  // save to Flash only if CRC does not match

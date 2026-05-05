@@ -19,45 +19,19 @@ enum
 
 static uint8_t paraStatus = 0;
 
-static void wordToByte(uint32_t word, uint8_t * bytes)
-{
-  uint8_t len = 4;
-  uint8_t i = 0;
-
-  for (i = 0; i < len; i++)
-  {
-    bytes[i] = (word >> 24) & 0xFF;
-    word <<= 8;
-  }
-}
-
-static uint32_t byteToWord(uint8_t * bytes, uint8_t len)
-{
-  uint32_t word = 0;
-  uint8_t i = 0;
-
-  for (i = 0; i < len; i++)
-  {
-    word <<= 8;
-    word |= bytes[i];
-  }
-
-  return word;
-}
-
 void readStoredPara(void)
 {
-  uint8_t data[PARA_SIZE];
+  uint32_t data[PARA_SIZE / 4];
   uint32_t index = 0;
   uint32_t sign = 0;
 
   #ifdef I2C_EEPROM  // added I2C_EEPROM suppport for MKS_TFT35_V1_0
-    EEPROM_FlashRead(data, PARA_SIZE);
+    EEPROM_FlashRead((uint8_t *)data, PARA_SIZE);
   #else
     HAL_FlashRead(data, PARA_SIZE);
   #endif
 
-  sign = byteToWord(data + (index += 4), 4);
+  sign = data[index++];
 
   if (sign == TSC_SIGN)
   {
@@ -65,11 +39,11 @@ void readStoredPara(void)
 
     for (int i = 0; i < sizeof(TS_CalPara) / sizeof(TS_CalPara[0]); i++)
     {
-      TS_CalPara[i] = byteToWord(data + (index += 4), 4);
+      TS_CalPara[i] = data[index++];
     }
   }
 
-  sign = byteToWord(data + (index += 4), 4);
+  sign = data[index++];
 
   if (sign != PARA_SIGN)  // if the settings parameter is illegal, reset settings parameter
   {
@@ -78,28 +52,30 @@ void readStoredPara(void)
   }
   else
   {
-    memcpy(&infoSettings, data + (index += 4), sizeof(SETTINGS));
+    memcpy(&infoSettings, &data[index], sizeof(SETTINGS));
     //if ((paraStatus & PARA_TSC_EXIST) == 0) infoSettings.rotated_ui = DISABLED;  // unecessarily rotates UI to Default?
   }
 }
 
 void storePara(void)
 {
-  uint8_t data[PARA_SIZE];
+  uint32_t data[PARA_SIZE / 4];
   uint32_t index = 0;
 
-  wordToByte(TSC_SIGN, data + (index += 4));
+  memset(data, 0xFF, sizeof(data));  // initialise buffer to unwritten flash memory
+  data[index++] = TSC_SIGN;
 
   for (int i = 0; i < sizeof(TS_CalPara) / sizeof(TS_CalPara[0]); i++)
   {
-    wordToByte(TS_CalPara[i], data + (index += 4));
+    data[index++] = TS_CalPara[i];
   }
 
-  wordToByte(PARA_SIGN, data + (index += 4));
-  memcpy(data + (index += 4), &infoSettings, sizeof(SETTINGS));
+  data[index++] = PARA_SIGN;
+
+  memcpy(&data[index], &infoSettings, sizeof(SETTINGS));
 
   #ifdef I2C_EEPROM                      // added I2C_EEPROM suppport for MKS_TFT35_V1_0
-    EEPROM_FlashWrite(data, PARA_SIZE);  // store settings in I2C_EEPROM
+    EEPROM_FlashWrite((uint8_t *)data, PARA_SIZE);  // store settings in I2C_EEPROM
   #else
     HAL_FlashWrite(data, PARA_SIZE);
   #endif
