@@ -78,6 +78,24 @@ Upgraded the FAT filesystem library from R0.14 to **R0.16** (sourced from [rondl
 
 Key addition in `diskio.c`: a `handleDiskError()` function that retries failed disk operations up to 100 times before giving up, instead of immediately failing. This fixes the **SD card freeze bug** where certain SD cards would cause the TFT to become unresponsive.
 
+### Known Bug — Stuck on Bootloader When No SD Card Is Inserted ⚠️
+
+**Help wanted — we don't know the root cause.**
+
+**Symptom:** When the printer is powered on without an SD card inserted in the TFT slot, the screen stays on the bootloader/splash screen indefinitely and never loads the main firmware UI. Inserting an SD card and rebooting resolves it — the firmware boots normally.
+
+**What we know:**
+- The bug exists in the upstream kisslorand fork before any of our changes are applied, so it is not introduced by the 7 PRs or the Artillery-specific modifications in this branch.
+- It appears to be specific to the **GD32F305** hardware variant (the `MKS_GD_TFT28_V1_2_4` build target). Other TFT hardware targets are not known to be affected.
+- The bootloader used is the **Artillery TFT28 V3.0.5 (GD32F305)** bootloader (found in `Bootloaders/MKS TFT28/Artillery TFT28 V3.0.5 (GD32F305)/`).
+- PR #2997 (FatFs R0.16) was applied specifically because it includes a disk-error retry loop (`handleDiskError()`) that was believed to help with SD-related stability — but it does not fix this boot-without-SD-card hang.
+
+**Suspected area:** The firmware likely performs a filesystem mount or SD card presence check very early in `main.c` or `boot.c`, and the code path when no card is found may block instead of continuing to boot. However, the exact location has not been confirmed.
+
+**If you know what causes this or have a fix, please open an issue or PR — any help is appreciated.**
+
+---
+
 ### Artillery Genius Pro-Specific Changes (independent of the PRs)
 
 Two small changes were made manually to adapt the firmware to this specific printer, not sourced from any PR:
