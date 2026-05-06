@@ -120,3 +120,4 @@ cmake-build-*
 .pydevproject
 .settings
 .classpath
+TFT/src/User/config-original.ini
