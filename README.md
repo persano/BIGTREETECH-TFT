@@ -78,6 +78,34 @@ Upgraded the FAT filesystem library from R0.14 to **R0.16** (sourced from [rondl
 
 Key addition in `diskio.c`: a `handleDiskError()` function that retries failed disk operations up to 100 times before giving up, instead of immediately failing. This fixes the **SD card freeze bug** where certain SD cards would cause the TFT to become unresponsive.
 
+### Additional rondlh Branches Applied (not PRs)
+
+Two additional branches from [rondlh](https://github.com/rondlh) were cherry-picked directly (not submitted as PRs to the upstream repo at the time of application).
+
+#### Flash Wear-Leveling (`rondlh/Flash-wear-leveling`)
+
+The GD32F305 stores settings in a 2 KB flash sector. The original code erased and rewrote that sector on every settings save — each erase counts against the flash endurance (~10,000 cycles). This branch adds 8-slot wear leveling to spread writes across the sector:
+
+| File | Change |
+|------|--------|
+| `HAL/gd32f30x/HAL_Flash.c` | Wear leveling across 8 slots; uses 32-bit word writes (`fmc_word_program`); sector is only erased when all 8 slots are exhausted |
+| `HAL/gd32f30x/HAL_Flash.h` | Updated function signatures to `uint32_t *` |
+| `FlashStore.h` | `PARA_SIZE` reduced 384 → 256; added `EMPTY_FLASH_WORD` constant |
+| `FlashStore.c` | Switched to `uint32_t[PARA_SIZE/4]` buffers; removed now-unnecessary byte conversion helpers |
+| `Settings.h` | `CRC_checksum` field upgraded from `uint16_t` to `uint32_t` |
+| `Settings.c` | Checksum algorithm switched from `calculateCRC16` to `calculateCRC32` |
+| `my_misc.h/.c` | Added `calculateCRC32` (CRC-32/ISO-HDLC, polynomial 0xEDB88320) |
+
+> **⚠️ First boot after flashing:** The CRC algorithm change causes a checksum mismatch — the firmware resets all settings to compiled-in defaults. Touchscreen recalibration is required once after flashing this build.
+
+#### Improved Touchscreen Calibration (`rondlh/Improve-touchscreen-calibration`)
+
+| File | Change |
+|------|--------|
+| `Touch_Screen.c` | Added `drawTouchTargetCross()` helper; tapped calibration dots disappear immediately after touch (better visual feedback); buzzer beep on each calibration point; success confirmation shown in dark green; failure message delay extended to 2500 ms |
+
+---
+
 ### Known Bug — Stuck on Bootloader When No SD Card Is Inserted ⚠️
 
 **Help wanted — we don't know the root cause.**
