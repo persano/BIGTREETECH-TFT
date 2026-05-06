@@ -97,7 +97,7 @@
  *
  *   Options: [disable: 0, enable: 1]
  */
-#define ADVANCED_OK 0  // Default: 0
+#define ADVANCED_OK 1  // Default: 0
 
 /**
  * TX Slots
@@ -295,7 +295,7 @@
  *     POPUP: Display a popup window for user confirmation.
  *     TOAST: A non-blocking toast notification is displayed for few seconds. No user interaction is needed.
  */
-#define ACK_NOTIFICATION 1  // Default: 1
+#define ACK_NOTIFICATION 2  // Default: 1
 
 /**
  * Files Sorting
@@ -634,7 +634,7 @@
  *
  *   Options: [disable: 0, enable: 1]
  */
-#define AUTO_LOAD_LEVELING 0  // Default: 0
+#define AUTO_LOAD_LEVELING 1  // Default: 0
 
 /**
  * Onboard / Printer Media
@@ -790,7 +790,7 @@
  *
  *   Options: [disable: 0, enable: 1]
  */
-#define PROBING_Z_OFFSET 1  // Default: 1
+#define PROBING_Z_OFFSET 0  // Default: 1
 
 /**
  * Probing Z Raise (Probe Offset, Mesh Editor)
@@ -1421,7 +1421,7 @@
 #define SHOW_BTT_BOOTSCREEN  // Default: uncommented (enabled)
 
 // Bootscreen logo time in ms
-#define BTT_BOOTSCREEN_TIME 3000  // Default: 3000
+#define BTT_BOOTSCREEN_TIME 1500  // Default: 3000
 
 /**
  * Safety Alert
@@ -1523,7 +1523,7 @@
  * Uncomment to enable a progress bar with 10% markers.
  * Comment to enable a standard progress bar.
  */
-//#define MARKED_PROGRESS_BAR  // Default: commented (disabled)
+#define MARKED_PROGRESS_BAR  // Default: commented (disabled)
 
 /**
  * Live Text Common Color Layout (Status Screen menu)
