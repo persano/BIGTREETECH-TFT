@@ -1,6 +1,7 @@
-<!-- omit in toc -->
-
 # BigTreeTech TFT Touchscreen
+
+[![License: MIT](https://img.shields.io/badge/License-GPL3.0-blue.svg)](LICENSE)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/persano/BIGTREETECH-TFT)
 
 ---
 
