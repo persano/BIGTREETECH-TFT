@@ -908,12 +908,24 @@ void loopPrintFromTFT(void)
       parseComment();
   }
 
+  // kisslorand 2023.XII.31: flush any gcode accumulated when the file ends without a trailing newline
+  // (otherwise the last command is silently lost and, depending on the trailing-byte pattern, the
+  // GUI may never switch to the end-print interface)
+  if (gcode_count != 0 && ip_cur >= ip_size)
+  {
+    gcode[gcode_count++] = '\n';
+    gcode[gcode_count] = '\0';
+    storeCmdFromUART(gcode, PORT_1);
+  }
+
   if (gcode_count == 0)
     infoPrinting.fileOffset += ip_cur - infoPrinting.cur;
 
   infoPrinting.cur = ip_cur;  // update infoPrinting.cur with current file position
 
-  if (ip_cur == ip_size)  // in case of end of gcode file, finalize the print
+  // kisslorand 2023.XII.31: include the >= case so a read error (ip_cur set to ip_size before ip_cur++)
+  // still finalizes the print instead of stalling at "almost done"
+  if (ip_cur >= ip_size)  // in case of end of gcode file, finalize the print
   {
     endPrint();
   }

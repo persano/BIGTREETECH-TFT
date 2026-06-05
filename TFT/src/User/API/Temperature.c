@@ -270,6 +270,11 @@ void loopCheckHeater(void)
     if (heat_sending_waiting || requestCommandInfoIsRunning())
       break;
 
+    // kisslorand 2025.VIII.31: don't spam M105 polls while the user is reading the terminal —
+    // they swamp the terminal log and make it unusable. M155 (auto-report) is unaffected.
+    if (MENU_IS(menuTerminal) && !infoMachineSettings.autoReportTemp)
+      break;
+
     heat_sending_waiting = !infoMachineSettings.autoReportTemp ? storeCmd("M105\n") : storeCmd("M155 S%u\n", heat_update_seconds);
   } while (0);
 

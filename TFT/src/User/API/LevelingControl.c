@@ -109,6 +109,16 @@ void levelingSetProbedPoint(int16_t x, int16_t y, float z)
   probedZ = z;
 }
 
+void levelingSetProbeError(void)
+{
+  // kisslorand 2025.I.3: a probing failure (G30 error / "Probing Failed") must
+  // release any TASK_LOOP_WHILE waiting on a result, otherwise the Corner
+  // Leveling menu spins forever. Caller (LevelCorner) checks for the error
+  // sentinel and displays "---" instead of overwriting the stored value.
+  probedPoint = LEVEL_POINT_ERROR;
+  probedZ = 0.0f;
+}
+
 LEVELING_POINT levelingGetProbedPoint(void)
 {
   return probedPoint;

@@ -13,16 +13,29 @@ _Min_Heap_Size = 0x5000;     /* required amount of heap  */
 _Min_Stack_Size = 0x2000;    /* required amount of stack */
 
 /* Specify the memory areas */
+/*
+ * NOTE 1: RAM ORIGIN is offset by 0xF0 from 0x20000000 because the MKS GD32F305
+ * bootloader corrupts the first ~240 bytes of SRAM when it jumps to the app
+ * (documented by kisslorand in BTT-TFT-FW README; previously observed as
+ * fanCmd[]/parameter_list[] landing in the corrupted zone).
+ *
+ * NOTE 2: RAM stays at 64K (not 96K) and _estack at 0x20010000 because EVEN
+ * the patched v3.0.5 bootloader rejects app SP > 0x20010000 — empirically
+ * verified 2026-06-04 when a 96K build got "stuck at completed" (bootloader
+ * accepted the FW image but refused the jump-to-app). The patched bootloader
+ * apparently only changes the SPI-flash-wipe and chirp behaviors, NOT the SP
+ * validation. Do NOT raise LENGTH above 64K-0xF0 or _estack above 0x20010000
+ * regardless of which bootloader is installed.
+ */
 MEMORY
 {
   FLASH (rx)      : ORIGIN = 0x08007000, LENGTH = 256K - 28K
-  RAM (xrw)       : ORIGIN = 0x20000000, LENGTH = 64K
+  RAM (xrw)       : ORIGIN = 0x200000F0, LENGTH = 64K - 0xF0
   MEMORY_B1 (rx)  : ORIGIN = 0x60000000, LENGTH = 0K
 }
 
 /* Highest address of the user mode stack */
-/* _estack = ALIGN(ORIGIN(RAM) + LENGTH(RAM) - 16, 8);    /* end of RAM */
-_estack = 0x20010000;    /* end of 64K RAM — bootloader rejects SP > 0x20010000 */
+_estack = 0x20010000;    /* end of 64K RAM — bootloader (both original and patched) rejects SP above this */
 
 /* Define output sections */
 SECTIONS

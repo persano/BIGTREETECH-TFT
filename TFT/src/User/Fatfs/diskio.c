@@ -60,6 +60,14 @@ DSTATUS disk_initialize(
   switch (pdrv)
   {
     case DEV_MMC:
+      #if defined(SD_SPI_SUPPORT) && defined(SD_CD_PIN)
+        // Skip SD_Init when no card is physically inserted. Without this guard
+        // the SPI wait paths in SD_Init() can spin for an effectively-infinite
+        // time on the GD32F305 when MISO floats, hanging boot before LCD_Init's
+        // splash is replaced by the main UI.
+        if (!SD_CD_Inserted())
+          return diskStatus[pdrv];  // STA_NOINIT — let f_mount fail gracefully
+      #endif
       if (SD_Init() == 0)
       {
         diskStatus[pdrv] &= ~STA_NOINIT;

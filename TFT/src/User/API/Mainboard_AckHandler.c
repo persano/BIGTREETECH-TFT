@@ -779,7 +779,15 @@ void parseAck(void)
 
         if (ack_seen("Time left:"))
         {
-          setPrintRemainingTime(ack_value() * 60);
+          // kisslorand 2025.VIII.31 tweak: M73 reports remaining time in whole minutes only,
+          // so applying it every time snaps the TFT's second-resolution counter back to xx:00.
+          // Only re-sync when the reported minute differs from where our local countdown is —
+          // this lets the per-second decrement run naturally between minute updates.
+          uint32_t reportedSec = (uint32_t) ack_value() * 60;
+          uint32_t curSec      = getPrintRemainingTime();
+          uint32_t curMin      = (curSec + 30) / 60;  // round to nearest minute
+          if ((uint32_t) ack_value() != curMin)
+            setPrintRemainingTime(reportedSec);
           setTimeFromSlicer(true);  // disable parsing remaning time from gcode comments
 
           if (getPrintProgressSource() < PROG_TIME && infoSettings.prog_source == 1)
@@ -968,7 +976,14 @@ void parseAck(void)
     // parse G30 coordinate unreachable message
     else if (ack_seen("Z Probe Past Bed"))
     {
-      levelingSetProbedPoint(-1, -1, 0);  // cancel waiting for coordinates
+      levelingSetProbeError();  // release LevelCorner waiter; display "---"
+
+      BUZZER_PLAY(SOUND_ERROR);
+    }
+    // parse generic G30 / probe failure (kisslorand 2025.I.3: previously hung)
+    else if (ack_seen("Probing Failed") || ack_seen("Probing failed"))
+    {
+      levelingSetProbeError();
 
       BUZZER_PLAY(SOUND_ERROR);
     }

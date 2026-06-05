@@ -9,6 +9,7 @@ extern "C" {
 
 typedef enum
 {
+  LEVEL_POINT_ERROR = -2,   // probe error (kisslorand 2025.I.3: don't hang on probing failure)
   LEVEL_NO_POINT = -1,
   LEVEL_BOTTOM_LEFT = 0,  // bottom left bed corner
   LEVEL_BOTTOM_RIGHT,     // bottom right bed corner
@@ -21,6 +22,7 @@ typedef enum
 void levelingMoveToPoint(LEVELING_POINT point);              // move to point
 void levelingProbePoint(LEVELING_POINT point);               // probe point
 void levelingSetProbedPoint(int16_t x, int16_t y, float z);  // set probed point and Z offset for point matching XY coords
+void levelingSetProbeError(void);                            // mark current probe operation as failed (releases waiters)
 LEVELING_POINT levelingGetProbedPoint(void);                 // get probed point or LEVEL_NO_POINT in case of no new updates
 void levelingResetProbedPoint(void);                         // reset probed point to LEVEL_NO_POINT to check for new updates
 float levelingGetProbedZ(void);                              // get probed Z offset

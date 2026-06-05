@@ -91,8 +91,18 @@ void menuLevelCorner(void)
 
           levelingProbePoint(i);
 
-          // wait until point probing is executed
+          // wait until point probing is executed (or fails — see LEVEL_POINT_ERROR)
           TASK_LOOP_WHILE(levelingGetProbedPoint() == LEVEL_NO_POINT);
+
+          if (levelingGetProbedPoint() == LEVEL_POINT_ERROR)
+          {
+            // kisslorand 2025.I.3: on probe error keep the "---" placeholder rather
+            // than overwriting the prior value with a meaningless one
+            strcpy(iconText[i], "---");
+            levelingResetProbedPoint();
+            menuDrawIconText(&levelCornerItems.items[valIconIndex[i]], valIconIndex[i]);
+            break;  // abort probing the rest of the points in this batch
+          }
 
           levelingResetProbedPoint();                     // reset to check for new updates
           levelCornerPosition[i] = levelingGetProbedZ();  // update position
