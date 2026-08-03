@@ -1,6 +1,9 @@
 #include "boot.h"
 #include "includes.h"
 
+#include "Variants/pin_MKS_GD_TFT28_V1_2_4.h"
+#include "Hal/gd32f20x/GPIO_Init.h"
+
 #define STR_PATH_JOIN                         "%s/%s"
 #define GET_FULL_PATH(buf, rootDir, filepath) sprintf(buf, STR_PATH_JOIN, rootDir, filepath)
 #define PADDING                               10
@@ -379,6 +382,11 @@ void scanUpdates(void)
 {
   char * rootDir = NULL;
 
+  if (GPIO_GetLevel(SD_CD_PIN) == 1) // Assume no SD CARD is 1 high level, if fails test with 0 low level
+  {
+      return; // Exit if no SD CARD
+  }
+  
   if (mountSDCard())
     rootDir = SD_ROOT_DIR;
   #ifdef USB_FLASH_DRIVE_SUPPORT
